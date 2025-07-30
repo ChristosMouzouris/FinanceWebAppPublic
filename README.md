@@ -43,3 +43,12 @@ A full-stack personal finance management tool that helps users understand and im
 - View and manage user profile and personal details
 
 ---
+
+## Tech Stack
+
+- **Frontend**: React.js, TailwindCSS, Chart.js
+- **Backend**: Django REST Framework
+- **Database**: PostgreSQL
+- **Authentication**: JWT (JSON Web Tokens)
+- **ML**: Scikit-learn for transaction categorisation
+- **File Upload**: Pandas for Excel processing
