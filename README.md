@@ -5,12 +5,12 @@ A full-stack personal finance management tool that helps users understand and im
 
 ## Table of Contents
 
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Code Snippets](#-code-snippets)
-- [Screenshots](#-screenshots)
-- [Purpose](#-purpose)
-- [Security Note](#-security-note)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Code Snippets](#code-snippets)
+- [Screenshots](#screenshots)
+- [Purpose](#purpose)
+- [Security Note](#security-note)
 
 ---
 
@@ -52,3 +52,19 @@ A full-stack personal finance management tool that helps users understand and im
 - **Authentication**: JWT (JSON Web Tokens)
 - **ML**: Scikit-learn for transaction categorisation
 - **File Upload**: Pandas for Excel processing
+
+---
+
+## Code Snippets
+
+---
+
+## Screenshots
+
+---
+
+## Purpose
+
+---
+
+## Security Note
