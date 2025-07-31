@@ -58,7 +58,7 @@ A full-stack personal finance management tool that helps users understand and im
 ## Code Snippets
 ### Adding transactions:
 This is the API endpoint for adding new transactions to the database
-<pre>
+
 ```python
 @api_bp.route("/transactions/add/single", methods=["POST"])
 @login_required
@@ -73,10 +73,10 @@ def transaction_add():
     except Exception as e:
         logging.error("An unexpected error occured:\n%s", traceback.format_exc())
         return jsonify({"error": "Unexpected server error."}), 500
-</pre>
+```
 
 This helper function handles the core transaction adding logic. It converts input types, predicts the category using an ML model, updates account balances and budgets, and safely commits the transaction to the database.
-<pre>
+
 ```python
 def add_transaction(new_transaction: Dict[str, Any]) -> Dict[str, Any]:
     #Checking required fields
@@ -117,7 +117,8 @@ def add_transaction(new_transaction: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         db.session.rollback()
         raise ValueError("Failed to add transaction to database.") from e
-</pre>
+```
+
 ---
 
 ## Screenshots
