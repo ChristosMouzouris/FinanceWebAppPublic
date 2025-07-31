@@ -10,7 +10,7 @@ A full-stack personal finance management tool that helps users understand and im
 - [Code Snippets](#code-snippets)
 - [Screenshots](#screenshots)
 - [Purpose](#purpose)
-- [Security Note](#security-note)
+- [Note](#snote)
 
 ---
 
@@ -186,8 +186,10 @@ The response would be something like this:
 ---
 
 ## Screenshots
+
+
 ### Secure register form
-![Register Screenshot](images/WebAppSignUpScreenshot.png)
+![Register Screenshot](images/WebAppSingUpScreenshot.png)
 
 ### Dashboard
 ![Dashboard Screenshot](images/WebAppDashboardScreenshot.png)
@@ -205,6 +207,9 @@ The response would be something like this:
 
 ## Purpose
 
+This project was built as a hands-on way to deepen my understanding of full-stack development. I wanted to challenge myself to design and implement a complete system. Beyond learning technical tools, I aimed to improve my ability to design for real-world use cases. Balancing usability, performance and maintainability. This project reflects not only what I’ve learned so far but how I approach problem solving and system design.
 ---
 
-## Security Note
+## Note
+
+If you see any mistakes or things that could be improved, don't hesitate to send me a message.
