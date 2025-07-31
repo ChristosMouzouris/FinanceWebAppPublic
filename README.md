@@ -182,9 +182,24 @@ The response would be something like this:
   "change": "10% higher"
 }
 ```
+
 ---
 
 ## Screenshots
+### Secure register form
+![Register Screenshot](images/WebAppSignUpScreenshot.png)
+
+### Dashboard
+![Dashboard Screenshot](images/WebAppDashboardScreenshot.png)
+
+### Transactions
+![Dashboard Screenshot](images/WebAppTransactionsScreenshot.png)
+
+### Accounts
+![Dashboard Screenshot](images/WebAppAccountsScreenshot.png)
+
+### Budgets and Bills
+![Dashboard Screenshot](images/WebAppBudgetsScreenshot.png)
 
 ---
 
