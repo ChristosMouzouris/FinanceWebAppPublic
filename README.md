@@ -22,14 +22,17 @@ A full-stack personal finance management tool that helps users understand and im
 
 ### Dashboard with Real-Time Insights
 - Net balance overview
-- Upcoming bills
-- Visual graphs for spending and income patterns
-- Auto-generated financial insights
+- Upcoming recurring bills
+- Line graph showing account balances over time
+- Pie chart for spending by category
+- Spending vs Income
+- Automatically surfaced financial insights
 
 ### Transactions
 - Sortable, paginated transaction list
 - Excel file upload for batch imports
 - Auto-categorisation with a custom ML model
+- Update or delete any transaction
 
 ### Accounts Management
 - Normal and savings accounts
