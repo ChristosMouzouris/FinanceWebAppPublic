@@ -245,7 +245,7 @@ Focused on high-leverage paths:
 - Budget updates
 - Account balance updates
 - Insight computation
--Categorisation functions
+- Categorisation functions
 
 Goal: Catch regressions early and ensure reliability of critical flows.
 
