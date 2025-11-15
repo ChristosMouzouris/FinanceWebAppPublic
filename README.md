@@ -1,66 +1,159 @@
-# Personal Finance Webapp
-A full-stack personal finance management tool that helps users understand and improve their financial health through rich data visualisation, automated insights, and powerful transaction handling — all in a secure environment.
+# Fintech Webapp
+Fullstack finance platform with ML-powered transaction categorisation, Redis-backed performance optimisation and a modular Flask + VanillaJS architecture.
 
 ---
 
 ## Table of Contents
 
+- [Core Engineering Highlights](#core-engineering-highlights)
+- [System Architecture](#system-architecture)
 - [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Code Snippets](#code-snippets)
+- [Key Engineering Decisions](#key-engineering-decisions)
+- [Code Examples](#code-examples)
 - [Screenshots](#screenshots)
+- [Tech Stack](#tech-stack)
 - [Purpose](#purpose)
-- [Note](#snote)
 
 ---
 
+## Core Engineering Highlights
+- Two-stage RandomForest ML pipeline combining TF-IDF text features + binned amount features for high-accuracy category + subcategory prediction.
+- 200% faster dashboard rendering through targeted Redis caching of insight computations.
+- Performance-driven refactor replacing Pandas with native Python after benchmarks showed a 35x speed improvement on per-user datasets.
+- Atomic transaction pipeline updating accounts, budgets, ML categorisation, and balances in a single consistent code path.
+- Separation of concerns via distinct layers: routes, services, ML pipeline, data access, and presentation.
+- Custom DOM architecture (no frontend frameworks) handling state updates, table rendering, filtering, and Chart.js updates at scale.
+- Test coverage focused on critical paths: authentication, transaction logic, insights, and prediction code.
+
+---
+
+## System Architecture
+```
+                          ┌─────────────────────────────┐
+                          │        Frontend             │
+                          │  VanillaJS / Tailwind /     │
+                          │        Chart.js             │
+                          └─────────────┬───────────────┘
+                                        │
+                                 REST JSON API
+                                        │
+                   ┌────────────────────┴────────────────────┐
+                   │                 Backend                 │
+                   │ Flask + SQLAlchemy + Flask-Migrate      │
+                   │  Routes → Services → Data Access        │
+                   └───────────────┬──────────────┬──────────┘
+                                   │              │
+                                   │              │
+                     ┌─────────────┴──────┐┌──────┴───────────┐
+                     │ ML Pipeline        ││  Caching Layer   │
+                     │ Two-stage RF       ││  Redis           │
+                     │ Vectorisers(TF-IDF)││                  │
+                     └─────────────┬──────┘└──────────────────┘
+                                   │            
+                         ┌─────────┴────────┐ 
+                         │   PostgreSQL     │ 
+                         │   Persisted Data │  
+                         └──────────────────┘
+
+```
+---
 ## Features
 
-### User Authentication
-- Secure sign-up and login
-- All passwords hashed with industry standards
-
-### Dashboard with Real-Time Insights
-- Net balance overview
+### Dashboard
+- Net balance
 - Upcoming recurring bills
-- Line graph showing account balances over time
-- Pie chart for spending by category
-- Spending vs Income
+- Line graph of account balances over time
+- Category spending pie chart
+- Spending vs income
 - Automatically surfaced financial insights
 
 ### Transactions
-- Sortable, paginated transaction list
-- Excel file upload for batch imports
-- Auto-categorisation with a custom ML model
-- Update or delete any transaction
+- Full CRUD
+- Sortable, paginated lists
+- Excel import (Pandas used here intentionally)
+- ML-powered auto-categorisation
+- Budget-aware expense updates
 
-### Accounts Management
+### Accounts
 - Normal and savings accounts
-- Savings include 15-year compound interest projections
+- 15-year compound interest projections
 
 ### Budgets & Bills
-- Set one budget per category
-- Track and visualise recurring bills
+- One budget per category
+- Recurring bill management
 
 ### Profile
-- View and manage user profile and personal details
+- Manage personal information
 
 ---
 
-## Tech Stack
+## Key Engineering Decisions
 
-- **Frontend**: React.js, TailwindCSS, Chart.js
-- **Backend**: Django REST Framework
-- **Database**: PostgreSQL
-- **Authentication**: JWT (JSON Web Tokens)
-- **ML**: Scikit-learn for transaction categorisation
-- **File Upload**: Pandas for Excel processing
+### 1. ML Pipeline
+
+Why RandomForest over Naive Bayes?
+Naive Bayes performed well on training data but collapsed on real-world text noise.
+RandomForest + amount features increased subcategory accuracy significantly.
+
+Pipeline architecture:
+- Stage 1: Predict parent category (TF-IDF + amount).
+- Stage 2: Predict subcategory using enriched input (text + predicted parent).
+- Sparse matrix stacking to combine numeric + text features.
+- Prevented data leakage by splitting before parent prediction.
+
+### 2. Redis Caching
+
+Problem: Dashboard insights were heavy due to per-request aggregation.
+Solution: Cache insight computations keyed by user ID.
+Outcome: ~200% faster dashboard load time.
+
+### 3. Pandas vs Native Python
+
+Observation: Per-user datasets (post-SQL filtering) were small.
+
+Benchmark results:
+- Native Python: ~35,000 ops/sec
+- Pandas: ~1,000 ops/sec
+
+Conclusion: Remove Pandas from insight generation and use it only for Excel import.
+
+### 4. Manual DOM Architecture
+
+Chose to avoid React deliberately to deepen frontend fundamentals.
+
+Built:
+- State management via JS objects
+- Table rendering from scratch
+- Event delegation patterns
+- Chart.js data binding and update lifecycle
+
+Result: Strong understanding of browser rendering costs and where frameworks help.
+
+### 5. Architecture & Separation of Concerns
+
+The application is divided into clean layers:
+- Routes (HTTP endpoint definitions)
+- Services (business logic)
+- ML (categorisation pipeline)
+- Data access (SQLAlchemy models, queries)
+- Templates / JS (presentation)
+
+Refactoring into these boundaries prevented divergence and ensured testability.
 
 ---
 
-## Code Snippets
-### Adding transactions:
-This is the API endpoint for adding new transactions to the database
+## Code Examples
+
+### Add Transaction (Endpoint)
+```
+POST /transactions/add/single
+```
+Handles:
+- User input validation
+- Type conversion
+- ML categorisation
+- Linked updates: accounts, budgets
+- Atomic DB commit
 
 ```python
 @api_bp.route("/transactions/add/single", methods=["POST"])
@@ -78,57 +171,13 @@ def transaction_add():
         return jsonify({"error": "Unexpected server error."}), 500
 ```
 
-This helper function handles the core transaction adding logic. It converts input types, predicts the category using an ML model, updates account balances and budgets, and safely commits the transaction to the database.
-
-```python
-def add_transaction(new_transaction: Dict[str, Any]) -> Dict[str, Any]:
-    # Checking required fields
-    check_transaction_required_fields(new_transaction)
-    #Handling type conversions
-    new_transaction["amount"] = Decimal(new_transaction["amount"])
-    new_transaction["date"] = datetime.strptime(new_transaction["date"], "%d/%m/%Y %H:%M")
-
-    # Getting correct account id from account name and updating account table
-    account: int = get_or_create_account(new_transaction["account_name"])
-    new_transaction["account_id"] = account._id
-
-    # Predicting category
-    category_name: str = predict_category(new_transaction["description"], new_transaction["transaction_type"], new_transaction["amount"])
-
-    # Getting correct category id from category name
-    new_transaction["category_id"] = get_category(category_name)
-    
-    # Updating account amount
-    update_account_balance(account._id, new_transaction["amount"], new_transaction["transaction_type"])
-
-    # Update any relevent budget
-    if new_transaction["transaction_type"] == "Expense":
-        update_budget(new_transaction["amount"], category_name)
-
-    # Add current user
-    new_transaction["user_id"] = int(current_user.get_id())
-        
-    # Sanitising and creating a model instance by unpacking
-    new_transaction.pop("account_name", None)
-    sanitised_transaction: Dict[str, Any] = sanitise_model_dict(new_transaction, Transaction)
-    unpacked_transaction = Transaction(**sanitised_transaction)
-
-    try:
-        db.session.add(unpacked_transaction)
-        db.session.commit()
-        return sanitised_transaction
-    except Exception as e:
-        db.session.rollback()
-        raise ValueError("Failed to add transaction to database.") from e
-```
-
 ### Predicting the category
 Predict the most likely sub-category for a given transaction using a two-stage ML pipeline.
 ```python
 def predict_category(t_description: str, t_type: str, t_amount: Decimal) -> str:
     try:
         # preprocess_text is a custom function that processes input text by lowercasing, removing punctuation,
-        # stripping stopwords, and lemmatizing.
+        # stripping stopwords and lemmatizing.
         combined_data1: str = preprocess_text(f"{t_description} {t_type}")
         X_text1 = vectoriser_one.transform([combined_data1])
 
@@ -188,6 +237,38 @@ The response would be something like this:
 
 ---
 
+## Testing Strategy
+
+Focused on high-leverage paths:
+- Authentication
+- Transaction creation logic
+- Budget updates
+- Account balance updates
+- Insight computation
+-Categorisation functions
+
+Goal: Catch regressions early and ensure reliability of critical flows.
+
+---
+
+## What I Learned
+- Importance of clear architectural boundaries as the codebase grows.
+- When to trade simplicity for performance (e.g., Redis, Native Python).
+- How real-world data breaks naive ML models and how to build more robust pipelines.
+- How to manage UI complexity without framework abstractions.
+
+---
+
+## Future Improvements
+- Background job queue for ML prediction to avoid blocking UI during large imports
+- Notifications system (email or push)
+- Improve mobile responsiveness
+- Migrate to PostgreSQL
+- Add materialised views for insight generation
+- Extend caching with invalidation rules
+
+---
+
 ## Screenshots
 
 
@@ -208,11 +289,18 @@ The response would be something like this:
 
 ---
 
+## Tech Stack
+
+- **Frontend**: VanillaJS, TailwindCSS, Chart.js
+- **Backend**: Flask, Python
+- **Database**: PostgreSQL
+- **Authentication**: JWT (JSON Web Tokens)
+- **ML**: Scikit-learn for transaction categorisation
+- **File Upload**: Pandas for Excel processing
+
+---
+
 ## Purpose
 
 This project was built as a hands-on way to deepen my understanding of full-stack development. I wanted to challenge myself to design and implement a complete system. Beyond learning technical tools, I aimed to improve my ability to design for real-world use cases. Balancing usability, performance and maintainability. This project reflects not only what I’ve learned so far but how I approach problem solving and system design.
 ---
-
-## Note
-
-If you see any mistakes or things that could be improved, don't hesitate to send me a message.
